@@ -1,0 +1,13 @@
+# SQLite database files
+fleet.db
+fleet.db-journal
+fleet.db-wal
+fleet.db-shm
+*.db
+*.db-journal
+
+# Binaries
+bin/
+
+# Temporary / OS
+.DS_Store
