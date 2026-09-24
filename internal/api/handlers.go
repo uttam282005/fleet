@@ -38,13 +38,28 @@ type HeartbeatRequest struct {
 	SignalStrength *float64 `json:"signal_strength,omitempty"`
 }
 
-// DeviceResponse represents the public JSON representation of a device.
+// DeviceResponse represents the public JSON representation of a device detail.
 type DeviceResponse struct {
 	ID            string          `json:"id"`
 	Name          string          `json:"name"`
 	Status        device.Status   `json:"status"`
 	LastHeartbeat *string         `json:"last_heartbeat,omitempty"`
 	LastMetrics   *device.Metrics `json:"last_metrics,omitempty"`
+}
+
+// DeviceListItem represents a device entry in the list endpoint response.
+type DeviceListItem struct {
+	ID            string        `json:"id"`
+	Name          string        `json:"name"`
+	Status        device.Status `json:"status"`
+	LastHeartbeat *string       `json:"last_heartbeat,omitempty"`
+}
+
+// SummaryResponse represents the aggregate fleet health summary.
+type SummaryResponse struct {
+	Total   int `json:"total"`
+	Online  int `json:"online"`
+	Offline int `json:"offline"`
 }
 
 func (h *Handler) toResponse(d *device.Device, now time.Time) DeviceResponse {
@@ -59,6 +74,19 @@ func (h *Handler) toResponse(d *device.Device, now time.Time) DeviceResponse {
 	}
 	resp.LastMetrics = d.LastMetrics
 	return resp
+}
+
+func (h *Handler) toListItem(d *device.Device, now time.Time) DeviceListItem {
+	item := DeviceListItem{
+		ID:     d.ID,
+		Name:   d.Name,
+		Status: d.Status(now),
+	}
+	if !d.LastHeartbeat.IsZero() {
+		hb := d.LastHeartbeat.UTC().Format(time.RFC3339)
+		item.LastHeartbeat = &hb
+	}
+	return item
 }
 
 // Register handles POST /devices to register a new device.
@@ -151,4 +179,72 @@ func (h *Handler) Heartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, h.toResponse(updated, now))
+}
+
+// List handles GET /devices with optional ?status=online|offline query filter.
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	statusFilter := strings.TrimSpace(r.URL.Query().Get("status"))
+
+	devices, err := h.store.List()
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, "failed to list devices")
+		return
+	}
+
+	now := h.now()
+	result := make([]DeviceListItem, 0, len(devices))
+	for _, d := range devices {
+		item := h.toListItem(d, now)
+		if statusFilter != "" && !strings.EqualFold(string(item.Status), statusFilter) {
+			continue
+		}
+		result = append(result, item)
+	}
+
+	WriteJSON(w, http.StatusOK, result)
+}
+
+// GetOne handles GET /devices/{id} to retrieve a single device detail.
+func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		WriteError(w, http.StatusBadRequest, "device id is required")
+		return
+	}
+
+	d, err := h.store.Get(id)
+	if err != nil {
+		if errors.Is(err, device.ErrNotFound) {
+			WriteError(w, http.StatusNotFound, "device not found")
+			return
+		}
+		WriteError(w, http.StatusInternalServerError, "failed to get device")
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, h.toResponse(d, h.now()))
+}
+
+// Summary handles GET /summary to return fleet-wide device status counts.
+func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
+	devices, err := h.store.List()
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, "failed to generate summary")
+		return
+	}
+
+	now := h.now()
+	summary := SummaryResponse{
+		Total: len(devices),
+	}
+
+	for _, d := range devices {
+		if d.Status(now) == device.StatusOnline {
+			summary.Online++
+		} else {
+			summary.Offline++
+		}
+	}
+
+	WriteJSON(w, http.StatusOK, summary)
 }
