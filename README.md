@@ -57,6 +57,19 @@ go run ./cmd/server
 
 The server listens on `:8080` by default and creates `fleet.db` in the working directory on first run.
 
+### Web UI Dashboard
+Open your browser to:
+```
+http://localhost:8080/
+```
+The embedded dashboard provides:
+- Live fleet health counters (`Total`, `Online`, `Offline`).
+- Auto-refreshing device table with status pills, relative heartbeat timings, CPU usage bars, and signal strength.
+- Status filters (`All`, `Online`, `Offline`).
+- Inline device registration form to easily add new devices.
+- Direct "Send Heartbeat" trigger buttons for instant testing.
+
+
 ---
 
 ## 6. Run Simulator

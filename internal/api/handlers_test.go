@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -264,3 +265,20 @@ func TestSummaryHandler(t *testing.T) {
 		t.Errorf("expected total=3, online=2, offline=1, got %+v", sum)
 	}
 }
+
+func TestWebDashboard(t *testing.T) {
+	router, _ := setupTestRouter(t, time.Now())
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for GET /, got %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "Fleet Monitor") {
+		t.Errorf("expected HTML body to contain 'Fleet Monitor'")
+	}
+}
+
