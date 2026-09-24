@@ -11,3 +11,7 @@ bin/
 
 # Temporary / OS
 .DS_Store
+
+# Local Architecture and Walkthrough documentation
+ARCHITECTURE_AND_CODE_WALKTHROUGH.md
+
