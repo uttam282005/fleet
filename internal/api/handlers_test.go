@@ -277,8 +277,17 @@ func TestWebDashboard(t *testing.T) {
 		t.Fatalf("expected 200 OK for GET /, got %d", rec.Code)
 	}
 	body := rec.Body.String()
-	if !strings.Contains(body, "Fleet Monitor") {
-		t.Errorf("expected HTML body to contain 'Fleet Monitor'")
+	if !strings.Contains(body, "<title>Fleet</title>") {
+		t.Errorf("expected HTML body to contain '<title>Fleet</title>'")
+	}
+
+	// Also verify self-hosted fonts route
+	reqFont := httptest.NewRequest(http.MethodGet, "/fonts/ibm-plex-sans-400.woff2", nil)
+	recFont := httptest.NewRecorder()
+	router.ServeHTTP(recFont, reqFont)
+	if recFont.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for /fonts/ibm-plex-sans-400.woff2, got %d", recFont.Code)
 	}
 }
+
 

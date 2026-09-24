@@ -17,10 +17,11 @@ func NewRouter(h *Handler) http.Handler {
 	mux.HandleFunc("GET /devices/{id}", h.GetOne)
 	mux.HandleFunc("GET /summary", h.Summary)
 
-	// Web UI dashboard
+	// Web UI dashboard & self-hosted static assets
 	fileServer := http.FileServer(http.FS(web.Content))
 	mux.Handle("GET /{$}", fileServer)
 	mux.Handle("GET /index.html", fileServer)
+	mux.Handle("GET /fonts/", fileServer)
 
 	return RecoverMiddleware(mux)
 }
