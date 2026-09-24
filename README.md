@@ -69,6 +69,25 @@ The embedded dashboard provides:
 - Inline device registration form to easily add new devices.
 - Direct "Send Heartbeat" trigger buttons for instant testing.
 
+### Run with Docker & Docker Compose
+
+Fleet provides production-ready, multi-stage Alpine Dockerfiles for both the server and the simulator, running as an unprivileged user with persistent volume storage for SQLite:
+
+```bash
+# Build and start both the server and the 5-device simulator in the background
+docker compose up -d
+
+# View live container logs
+docker compose logs -f
+
+# Check health and status
+docker compose ps
+
+# Stop containers
+docker compose down
+```
+
+The server exposes `http://localhost:8080/` with the dashboard, and SQLite data persists across restarts in the `fleet-data` Docker volume.
 
 ---
 

@@ -1,4 +1,4 @@
-.PHONY: all build run sim test clean
+.PHONY: all build run sim test clean docker-build docker-up docker-down docker-logs
 
 all: build
 
@@ -18,3 +18,15 @@ test:
 
 clean:
 	rm -rf bin/ fleet.db fleet.db-journal fleet.db-wal fleet.db-shm
+
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f

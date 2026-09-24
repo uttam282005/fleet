@@ -1,0 +1,10 @@
+.git
+bin/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+fleet_test.db*
+fleet_ui_test.db*
+fleet_theme_test.db*
+ARCHITECTURE_AND_CODE_WALKTHROUGH.md
